@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/radstack-pub/config"
+	"github.com/radstack/radstack-go-client/config"
 	"github.com/ravendb/ravendb-go-client"
 	"log"
 	"regexp"
