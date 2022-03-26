@@ -46,9 +46,9 @@ func Id() string {
 }
 
 func newDocumentStore(databaseName string) (*ravendb.DocumentStore, error) {
-	serverNodes := strings.Split(envDbNodesString, ",")
+	serverNodes := strings.Split(mustEnvVar(envDbNodesString), ",")
 
-	cer, err := tls.X509KeyPair([]byte(envDbCert), []byte(envDbKey))
+	cer, err := tls.X509KeyPair([]byte(mustEnvVar(envDbCert)), []byte(mustEnvVar(envDbKey)))
 	if err != nil {
 		return nil, err
 	}
@@ -85,6 +85,14 @@ func printRQL(q *ravendb.DocumentQuery) {
 		fmt.Printf("  $%s: %#v\n", key, params[key])
 	}
 	fmt.Print("\n")
+}
+
+func mustEnvVar(envVarName string) string {
+	envVarVal, hasEnvVarVal := os.LookupEnv(envVarName)
+	if !hasEnvVarVal {
+		log.Fatalf("Could not look up environmental variable %s\n", envVarName)
+	}
+	return envVarVal
 }
 
 var allowableCharsRegexp = regexp.MustCompile("[^a-z]*")
