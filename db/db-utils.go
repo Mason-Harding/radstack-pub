@@ -13,14 +13,14 @@ import (
 )
 
 var (
-	envDbId         = os.Getenv("RADSTACK_DB_ID") // don't normally set this, rather use dbName, stage, and orgId
-	dbName          = os.Getenv("RADSTACK_DB_NAME")
-	dbCert          = os.Getenv("RADSTACK_DB_CERT")
-	dbKey           = os.Getenv("RADSTACK_DB_KEY")
-	dbNodesString   = os.Getenv("RADSTACK_DB_NODES")
-	stage           = os.Getenv("RADSTACK_STAGE")
-	orgId           = os.Getenv("RADSTACK_ORG_ID")
-	DocumentSession = newDocumentSession()
+	envDbId          = "RADSTACK_DB_ID" // don't normally set this, rather use dbName, stage, and orgId
+	envDbName        = "RADSTACK_DB_NAME"
+	envDbCert        = "RADSTACK_DB_CERT"
+	envDbKey         = "RADSTACK_DB_KEY"
+	envDbNodesString = "RADSTACK_DB_NODES"
+	envStage         = "RADSTACK_STAGE"
+	envOrgId         = "RADSTACK_ORG_ID"
+	DocumentSession  = newDocumentSession()
 )
 
 func newDocumentSession() *ravendb.DocumentSession {
@@ -38,17 +38,17 @@ func newDocumentSession() *ravendb.DocumentSession {
 }
 
 func Id() string {
-	if envDbId != "" {
-		return envDbId
+	if dbId := os.Getenv(envDbId); dbId != "" {
+		return dbId
 	} else {
-		return fmt.Sprintf("%s-%s-%s", mustSanitizedName(orgId), mustSanitizedName(dbName), mustSanitizedName(stage))
+		return fmt.Sprintf("%s-%s-%s", mustSanitizedEnvVar(envOrgId), mustSanitizedEnvVar(envDbName), mustSanitizedEnvVar(envStage))
 	}
 }
 
 func newDocumentStore(databaseName string) (*ravendb.DocumentStore, error) {
-	serverNodes := strings.Split(dbNodesString, ",")
+	serverNodes := strings.Split(envDbNodesString, ",")
 
-	cer, err := tls.X509KeyPair([]byte(dbCert), []byte(dbKey))
+	cer, err := tls.X509KeyPair([]byte(envDbCert), []byte(envDbKey))
 	if err != nil {
 		return nil, err
 	}
@@ -87,26 +87,18 @@ func printRQL(q *ravendb.DocumentQuery) {
 	fmt.Print("\n")
 }
 
-func mustEnvVar(envVarName string) string {
-	envVarVal, hasEnvVarVal := os.LookupEnv(envVarName)
-	if !hasEnvVarVal {
-		log.Fatalf("Could not look up environmental variable %s\n", envVarName)
-	}
-	return envVarVal
-}
-
 var allowableCharsRegexp = regexp.MustCompile("[^a-z]*")
 
-func sanitizedName(name string) (string, error) {
-	s := allowableCharsRegexp.ReplaceAllString(strings.ToLower(name), "")
+func sanitizedEnvVar(e string) (string, error) {
+	s := allowableCharsRegexp.ReplaceAllString(strings.ToLower(e), "")
 	if len(s) < 3 {
-		return "", fmt.Errorf("name %s after being sanitized to %s is too short, must be atleast 3 chars in length\n", name, s)
+		return "", fmt.Errorf("For env var %s, after being sanitized to %s is too short, must be atleast 3 chars in length\n", e, s)
 	}
 	return s, nil
 }
 
-func mustSanitizedName(name string) string {
-	s, err := sanitizedName(name)
+func mustSanitizedEnvVar(name string) string {
+	s, err := sanitizedEnvVar(name)
 	if err != nil {
 		log.Fatal(err)
 	}
