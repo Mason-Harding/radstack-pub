@@ -13,17 +13,18 @@ import (
 )
 
 var (
+	envDbId         = os.Getenv("RADSTACK_DB_ID") // don't normally set this, rather use dbName, stage, and orgId
 	dbName          = mustEnvVar("RADSTACK_DB_NAME")
 	dbCert          = mustEnvVar("RADSTACK_DB_CERT")
 	dbKey           = mustEnvVar("RADSTACK_DB_KEY")
 	dbNodesString   = mustEnvVar("RADSTACK_DB_NODES")
 	stage           = mustEnvVar("RADSTACK_STAGE")
 	orgId           = mustEnvVar("RADSTACK_ORG_ID")
-	DocumentSession = newDocumentSession(orgId, dbName, stage)
+	DocumentSession = newDocumentSession()
 )
 
-func newDocumentSession(orgId, dbName, stage string) *ravendb.DocumentSession {
-	dbId := fmt.Sprintf("%s-%s-%s", mustSanitizedName(orgId), mustSanitizedName(dbName), mustSanitizedName(stage))
+func newDocumentSession() *ravendb.DocumentSession {
+	dbId := Id()
 	store, err := newDocumentStore(dbId)
 	if err != nil {
 		log.Fatalf("newDocumentStore for db %s failed with %s\n", dbId, err)
@@ -34,6 +35,14 @@ func newDocumentSession(orgId, dbName, stage string) *ravendb.DocumentSession {
 		log.Fatalf("OpenSession for db %s failed with %s\n", dbId, err)
 	}
 	return session
+}
+
+func Id() string {
+	if envDbId != "" {
+		return envDbId
+	} else {
+		return fmt.Sprintf("%s-%s-%s", mustSanitizedName(orgId), mustSanitizedName(dbName), mustSanitizedName(stage))
+	}
 }
 
 func newDocumentStore(databaseName string) (*ravendb.DocumentStore, error) {
