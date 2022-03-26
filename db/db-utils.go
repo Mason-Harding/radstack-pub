@@ -14,12 +14,12 @@ import (
 
 var (
 	envDbId         = os.Getenv("RADSTACK_DB_ID") // don't normally set this, rather use dbName, stage, and orgId
-	dbName          = mustEnvVar("RADSTACK_DB_NAME")
-	dbCert          = mustEnvVar("RADSTACK_DB_CERT")
-	dbKey           = mustEnvVar("RADSTACK_DB_KEY")
-	dbNodesString   = mustEnvVar("RADSTACK_DB_NODES")
-	stage           = mustEnvVar("RADSTACK_STAGE")
-	orgId           = mustEnvVar("RADSTACK_ORG_ID")
+	dbName          = os.Getenv("RADSTACK_DB_NAME")
+	dbCert          = os.Getenv("RADSTACK_DB_CERT")
+	dbKey           = os.Getenv("RADSTACK_DB_KEY")
+	dbNodesString   = os.Getenv("RADSTACK_DB_NODES")
+	stage           = os.Getenv("RADSTACK_STAGE")
+	orgId           = os.Getenv("RADSTACK_ORG_ID")
 	DocumentSession = newDocumentSession()
 )
 
