@@ -4,22 +4,22 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/radstack-pub/config"
 	"github.com/ravendb/ravendb-go-client"
 	"log"
-	"os"
 	"regexp"
 	"sort"
 	"strings"
 )
 
 var (
-	envDbId          = "RADSTACK_DB_ID" // don't normally set this, rather use dbName, stage, and orgId
-	envDbName        = "RADSTACK_DB_NAME"
-	envDbCert        = "RADSTACK_DB_CERT"
-	envDbKey         = "RADSTACK_DB_KEY"
-	envDbNodesString = "RADSTACK_DB_NODES"
-	envStage         = "RADSTACK_STAGE"
-	envOrgId         = "RADSTACK_ORG_ID"
+	keyDbId          = "RADSTACK_DB_ID" // don't normally set this, rather use dbName, stage, and orgId
+	keyDbName        = "RADSTACK_DB_NAME"
+	keyDbCert        = "RADSTACK_DB_CERT"
+	keyDbKey         = "RADSTACK_DB_KEY"
+	keyDbNodesString = "RADSTACK_DB_NODES"
+	keyStage         = "RADSTACK_STAGE"
+	keyOrgId         = "RADSTACK_ORG_ID"
 	DocumentSession  = newDocumentSession()
 )
 
@@ -38,17 +38,17 @@ func newDocumentSession() *ravendb.DocumentSession {
 }
 
 func Id() string {
-	if dbId := os.Getenv(envDbId); dbId != "" {
-		return dbId
+	if dbId := configVal(keyDbId); dbId != nil {
+		return *dbId
 	} else {
-		return fmt.Sprintf("%s-%s-%s", mustSanitizedEnvVar(envOrgId), mustSanitizedEnvVar(envDbName), mustSanitizedEnvVar(envStage))
+		return fmt.Sprintf("%s-%s-%s", mustSanitizedConfigValue(keyOrgId), mustSanitizedConfigValue(keyDbName), mustSanitizedConfigValue(keyStage))
 	}
 }
 
 func newDocumentStore(databaseName string) (*ravendb.DocumentStore, error) {
-	serverNodes := strings.Split(mustEnvVar(envDbNodesString), ",")
+	serverNodes := strings.Split(mustConfigVal(keyDbNodesString), ",")
 
-	cer, err := tls.X509KeyPair([]byte(mustEnvVar(envDbCert)), []byte(mustEnvVar(envDbKey)))
+	cer, err := tls.X509KeyPair([]byte(mustConfigVal(keyDbCert)), []byte(mustConfigVal(keyDbKey)))
 	if err != nil {
 		return nil, err
 	}
@@ -87,26 +87,40 @@ func printRQL(q *ravendb.DocumentQuery) {
 	fmt.Print("\n")
 }
 
-func mustEnvVar(envVarName string) string {
-	envVarVal, hasEnvVarVal := os.LookupEnv(envVarName)
-	if !hasEnvVarVal {
-		log.Fatalf("Could not look up environmental variable %s\n", envVarName)
+var c *config.Config
+
+func configVal(name string) *string {
+	if c == nil {
+		c = config.NewConfig()
 	}
-	return envVarVal
+	v := c.GetValue(name)
+	return v
+}
+
+func mustConfigVal(name string) string {
+	v := configVal(name)
+	if v == nil {
+		fmt.Errorf("Could not look up config value %s\n", name)
+	}
+	return *v
 }
 
 var allowableCharsRegexp = regexp.MustCompile("[^a-z]*")
 
-func sanitizedEnvVar(e string) (string, error) {
-	s := allowableCharsRegexp.ReplaceAllString(strings.ToLower(e), "")
-	if len(s) < 3 {
-		return "", fmt.Errorf("For env var %s, after being sanitized to %s is too short, must be atleast 3 chars in length\n", e, s)
+func sanitizedConfigValue(name string) (string, error) {
+	v := configVal(name)
+	if v == nil {
+		return "", fmt.Errorf("Could not look up config value %s\n", name)
 	}
-	return s, nil
+	vLower := allowableCharsRegexp.ReplaceAllString(strings.ToLower(*v), "")
+	if len(vLower) < 3 {
+		return "", fmt.Errorf("For env var %s, after being sanitized to %s is too short, must be atleast 3 chars in length\n", name, vLower)
+	}
+	return vLower, nil
 }
 
-func mustSanitizedEnvVar(name string) string {
-	s, err := sanitizedEnvVar(name)
+func mustSanitizedConfigValue(name string) string {
+	s, err := sanitizedConfigValue(name)
 	if err != nil {
 		log.Fatal(err)
 	}
