@@ -26,7 +26,7 @@ func TestFileVal(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	configFileName = f.Name()
+	defaultConfigFileName = f.Name()
 
 	f.WriteString(fmt.Sprintf("%s=%s", k, v))
 	assert.Equal(t, v, *NewConfig().GetValue(k))
@@ -42,7 +42,7 @@ func TestEnvBeforeFileVal(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	configFileName = f.Name()
+	defaultConfigFileName = f.Name()
 	f.WriteString(fmt.Sprintf("%s=%s", k, fileV))
 
 	os.Setenv(k, envV)
@@ -64,7 +64,7 @@ LINES==
 	if err != nil {
 		panic(err)
 	}
-	configFileName = f.Name()
+	defaultConfigFileName = f.Name()
 
 	f.WriteString(fmt.Sprintf("%s=%s", k, "`"+v+"`"))
 	assert.Equal(t, v, *NewConfig().GetValue(k))
