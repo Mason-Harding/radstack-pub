@@ -55,6 +55,15 @@ func (c *Config) GetValue(name string) *string {
 	return nil
 }
 
+// GetValueOrDefault will get a value, or return a default.  It will however not cache the default.
+func (c *Config) GetValueOrDefault(name string, defaultValue string) string {
+	v := c.GetValue(name)
+	if v != nil {
+		return *v
+	}
+	return defaultValue
+}
+
 func valFromEnv(name string) *string {
 	v, hasV := os.LookupEnv(name)
 	if !hasV {
