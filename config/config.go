@@ -31,6 +31,7 @@ func NewConfigWithFile(configFile string, onlyUseFile bool) *Config {
 	c.valCache = map[string]*string{}
 	c.configFileVals = map[string]*string{}
 	c.configFileName = configFile
+	c.onlyUseConfigFile = onlyUseFile
 	return c
 }
 
