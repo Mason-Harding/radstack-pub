@@ -9,21 +9,27 @@ import (
 )
 
 var (
-	usr, _         = user.Current()
-	dir            = usr.HomeDir
-	configFileName = dir + "/.radstack/config"
+	usr, _                = user.Current()
+	dir                   = usr.HomeDir
+	defaultConfigFileName = dir + "/.radstack/config"
 )
 
 type Config struct {
 	valCache           map[string]*string
 	configFileVals     map[string]*string
 	configFileIsLoaded bool
+	configFileName     string
 }
 
 func NewConfig() *Config {
+	return NewConfigWithFile(defaultConfigFileName)
+}
+
+func NewConfigWithFile(configFile string) *Config {
 	c := new(Config)
 	c.valCache = map[string]*string{}
 	c.configFileVals = map[string]*string{}
+	c.configFileName = configFile
 	return c
 }
 
@@ -56,7 +62,7 @@ func valFromEnv(name string) *string {
 }
 
 func (c *Config) valFromConfigFile(name string) *string {
-	if !c.configFileIsLoaded && configFileExists() {
+	if !c.configFileIsLoaded && c.configFileExists() {
 		err := c.loadConfigFileVals()
 		if err != nil {
 			panic(err)
@@ -66,8 +72,8 @@ func (c *Config) valFromConfigFile(name string) *string {
 	return c.configFileVals[name]
 }
 
-func configFileExists() bool {
-	stat, err := os.Stat(configFileName)
+func (c *Config) configFileExists() bool {
+	stat, err := os.Stat(c.configFileName)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return false
@@ -86,7 +92,7 @@ func (c *Config) loadConfigFileVals() error {
 	if c.configFileIsLoaded {
 		return errors.New("radstack config file is already loaded")
 	}
-	f, err := os.Open(configFileName)
+	f, err := os.Open(defaultConfigFileName)
 	if err != nil {
 		return err
 	}
