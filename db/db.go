@@ -65,7 +65,7 @@ func newDocumentStore(databaseName string) (*ravendb.DocumentStore, error) {
 	return store, nil
 }
 
-func printRQL(q *ravendb.DocumentQuery) {
+func PrintRQL(q *ravendb.DocumentQuery) {
 	iq, err := q.GetIndexQuery()
 	if err != nil {
 		log.Fatalf("q.GetIndexQuery() returned '%s'\n", err)
