@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	keyDbId          = "RADSTACK_DB_ID" // don't normally set this, rather use dbName, stage, and orgId
+	keyDbId          = "RADSTACK_DB_ID"
 	keyDbName        = "RADSTACK_DB_NAME"
 	keyDbCert        = "RADSTACK_DB_CERT"
 	keyDbKey         = "RADSTACK_DB_KEY"
@@ -98,11 +98,11 @@ func configVal(name string) *string {
 }
 
 func mustConfigVal(name string) string {
-	v := configVal(name)
-	if v == nil {
-		fmt.Errorf("Could not look up config value %s\n", name)
+	if c == nil {
+		c = config.NewConfig()
 	}
-	return *v
+	v := c.MustGetValue(name)
+	return v
 }
 
 var allowableCharsRegexp = regexp.MustCompile("[^a-z]*")

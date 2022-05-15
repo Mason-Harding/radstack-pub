@@ -3,6 +3,7 @@ package config
 import (
 	"bufio"
 	"errors"
+	"log"
 	"os"
 	"os/user"
 	"strings"
@@ -53,6 +54,14 @@ func (c *Config) GetValue(name string) *string {
 		return v
 	}
 	return nil
+}
+
+func (c *Config) MustGetValue(name string) string {
+	v := c.GetValue(name)
+	if v == nil {
+		log.Fatalf("Could not look up value %s\n", name)
+	}
+	return *v
 }
 
 // GetValueOrDefault will get a value, or return a default.  It will however not cache the default.
